@@ -14,16 +14,41 @@ jobs:
       - name: Descargar el código
         uses: actions/checkout@v4
 
-      - name: Compilar con Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
         with:
-          command: buildozer android debug
-          buildozer_version: stable
+          python-version: "3.11"
+
+      - name: Instalar dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential ccache git zip unzip openjdk-17-jdk \
+            python3-pip autoconf libtool pkg-config zlib1g-dev \
+            libncurses-dev libtinfo6 cmake libffi-dev libssl-dev \
+            libltdl-dev gettext
+
+      - name: Instalar Buildozer y Cython
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install "cython<3.0" buildozer
+
+      - name: Cachear el SDK/NDK de Android
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.buildozer
+            .buildozer
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-${{ runner.os }}-
+
+      - name: Compilar el APK (modo debug)
+        run: buildozer android debug
 
       - name: Subir el APK como artefacto
         uses: actions/upload-artifact@v4
         with:
           name: flyer-apk
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
           if-no-files-found: error
