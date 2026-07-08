@@ -1,30 +1,67 @@
-name: Compilar APK de Android
+[app]
 
-# Se ejecuta al hacer push y también manualmente desde la pestaña "Actions".
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+# Nombre visible de la app
+title = Generador de Flyers
 
-jobs:
-  build-android:
-    name: Build APK con Buildozer
-    runs-on: ubuntu-latest
+# Identificadores del paquete
+package.name = flyergen
+package.domain = com.luisstudio
 
-    steps:
-      - name: Descargar el código
-        uses: actions/checkout@v4
+# Código fuente
+source.dir = .
+source.include_exts = py,png,jpg,jpeg,ttf,json,kv
 
-      - name: Compilar con Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          command: buildozer android debug
-          buildozer_version: stable
+# Versión
+version = 1.0
 
-      - name: Subir el APK como artefacto
-        uses: actions/upload-artifact@v4
-        with:
-          name: flyer-apk
-          path: ${{ steps.buildozer.outputs.filename }}
-          if-no-files-found: error
+# Dependencias de Python.
+#  - pillow: motor de imagen (flyer_render)
+#  - qrcode: códigos QR (opcional; si falla, la app funciona sin QR)
+#  - plyer: selector de archivos multiplataforma
+#  - pyjnius: puente Python<->Java (permisos, compartir, almacenamiento Android)
+# El módulo `android` lo aporta automáticamente el bootstrap SDL2 de p4a.
+requirements = python3,kivy,pillow,qrcode,plyer,pyjnius
+
+# Icono de la app y pantalla de carga
+icon.filename = %(source.dir)s/icon.png
+presplash.filename = %(source.dir)s/presplash.png
+android.presplash_color = #1A1A2E
+
+# Orientación
+orientation = portrait
+
+# Pantalla completa desactivada (se ve la barra de estado)
+fullscreen = 0
+
+# --- Android ---------------------------------------------------------------- #
+# Permisos necesarios: leer imágenes de la galería y escribir el PNG generado.
+android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES
+
+# API objetivo y mínima (Play Store exige target alto; min 24 cubre 99% de equipos)
+android.api = 34
+android.minapi = 24
+
+# Arquitecturas (la mayoría de teléfonos modernos son arm64; se incluye armeabi por compatibilidad)
+android.archs = arm64-v8a, armeabi-v7a
+
+# AndroidX es necesario para FileProvider (compartir la imagen)
+android.enable_androidx = True
+
+# FileProvider para poder compartir el archivo generado vía Intent.
+# (Se declara aquí; el manifest lo añade buildozer con androidx.)
+android.add_src =
+
+# Acepta automáticamente las licencias del SDK durante la primera compilación
+android.accept_sdk_license = True
+
+# Bootstrap de p4a
+p4a.bootstrap = sdl2
+
+
+[buildozer]
+
+# Nivel de log (2 = detallado, útil la primera vez)
+log_level = 2
+
+# No ejecutar como root
+warn_on_root = 1
