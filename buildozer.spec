@@ -41,8 +41,14 @@ android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, R
 android.api = 34
 android.minapi = 24
 
+# NDK fija a la versión estable más probada por python-for-android.
+# (Dejarla en automático descargaba la r28c, que rompe la compilación nativa.)
+android.ndk = 25b
+
 # Arquitecturas (la mayoría de teléfonos modernos son arm64; se incluye armeabi por compatibilidad)
-android.archs = arm64-v8a, armeabi-v7a
+# Una sola arquitectura: arm64-v8a cubre prácticamente todos los teléfonos
+# actuales, compila el doble de rápido y evita fallos de armeabi-v7a.
+android.archs = arm64-v8a
 
 # AndroidX es necesario para FileProvider (compartir la imagen)
 android.enable_androidx = True
