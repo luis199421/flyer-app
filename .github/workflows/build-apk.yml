@@ -14,6 +14,12 @@ jobs:
       - name: Descargar el código
         uses: actions/checkout@v4
 
+      - name: Liberar espacio en disco
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+                      /opt/hostedtoolcache/CodeQL /usr/local/lib/android/sdk/ndk || true
+          df -h /
+
       - name: Configurar Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -33,18 +39,26 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install "cython<3.0" buildozer
 
-      - name: Cachear el SDK/NDK de Android
+      - name: Cachear el SDK/NDK de Android (solo descargas)
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.buildozer
-            .buildozer
-          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          path: ~/.buildozer
+          key: buildozer-global-${{ hashFiles('buildozer.spec') }}
           restore-keys: |
-            buildozer-${{ runner.os }}-
+            buildozer-global-
 
       - name: Compilar el APK (modo debug)
-        run: buildozer android debug
+        run: |
+          set -o pipefail
+          buildozer android debug 2>&1 | tee build_full.log
+
+      - name: Guardar el log completo (siempre, aunque falle)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build_full.log
+          if-no-files-found: warn
 
       - name: Subir el APK como artefacto
         uses: actions/upload-artifact@v4
