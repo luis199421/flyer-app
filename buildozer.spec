@@ -1,0 +1,30 @@
+name: Compilar APK de Android
+
+# Se ejecuta al hacer push y también manualmente desde la pestaña "Actions".
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build APK con Buildozer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Compilar con Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: buildozer android debug
+          buildozer_version: stable
+
+      - name: Subir el APK como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: flyer-apk
+          path: ${{ steps.buildozer.outputs.filename }}
+          if-no-files-found: error
