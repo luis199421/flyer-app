@@ -55,7 +55,6 @@ android.enable_androidx = True
 
 # FileProvider para poder compartir el archivo generado vía Intent.
 # (Se declara aquí; el manifest lo añade buildozer con androidx.)
-android.add_src =
 
 # Acepta automáticamente las licencias del SDK durante la primera compilación
 android.accept_sdk_license = True
