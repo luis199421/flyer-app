@@ -52,7 +52,17 @@ jobs:
           set -o pipefail
           buildozer android debug 2>&1 | tee build_full.log
 
-      - name: Guardar el log completo (siempre, aunque falle)
+      # >>> Si algo falla, esto imprime el error AL FINAL del log (GitHub no corta el final) <<<
+      - name: Mostrar el error si la compilacion fallo
+        if: failure()
+        run: |
+          echo "==================== ULTIMAS 80 LINEAS DEL LOG ===================="
+          tail -n 80 build_full.log || true
+          echo ""
+          echo "==================== LINEAS CON error / failed / traceback ===================="
+          grep -i -n -E "error|failed|exception|traceback|command failed|aborting" build_full.log | tail -n 50 || true
+
+      - name: Guardar el log completo como archivo (siempre)
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -60,7 +70,7 @@ jobs:
           path: build_full.log
           if-no-files-found: warn
 
-      - name: Subir el APK como artefacto
+      - name: Subir el APK
         uses: actions/upload-artifact@v4
         with:
           name: flyer-apk
