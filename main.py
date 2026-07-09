@@ -11,7 +11,7 @@ Empaquetar para Android:              buildozer -v android debug
 
 import os
 import json
-import threading
+import threading 
 from datetime import datetime
 
 from kivy.app import App
